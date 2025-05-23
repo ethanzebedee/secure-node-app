@@ -4,44 +4,46 @@ FROM node:20-slim AS builder
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# Copy package files for dependency installation
 COPY package*.json ./
 
 # Install dependencies with exact versions from package-lock.json
-RUN npm ci --only=production
+RUN npm ci --omit=dev && npm cache clean --force
 
-# Stage 2: Runtime
-FROM node:20-slim
+# Stage 2: Runtime using Alpine for minimal size and security
+FROM node:20-alpine
 
-# Set environment variables
+# Set security-related environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
+# Set secure Node.js options
+ENV NODE_OPTIONS="--max-http-header-size=8192 --no-deprecation"
 
-# Create a non-root user
-RUN groupadd -r nodeuser && useradd -r -g nodeuser -u 1001 nodeuser
+# Create a non-root user and set permissions
+RUN addgroup -g 1001 nodeapp && \
+    adduser -u 1001 -G nodeapp -s /bin/sh -D nodeapp && \
+    mkdir -p /app && \
+    chown -R nodeapp:nodeapp /app
 
 # Set working directory
 WORKDIR /app
 
 # Copy node_modules from builder stage
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder --chown=nodeapp:nodeapp /app/node_modules ./node_modules
 
 # Copy application files
-COPY . .
-
-# Set proper permissions
-RUN chown -R nodeuser:nodeuser /app
+COPY --chown=nodeapp:nodeapp server.js package.json ./
 
 # Switch to non-root user
-USER nodeuser
+USER nodeapp
 
 # Expose the port the app runs on
 EXPOSE 3000
 
 # Command to run the application
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
 
 # Add healthcheck
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD node -e "try { require('http').get('http://localhost:' + (process.env.PORT || 3000) + '/', (res) => res.statusCode === 200 ? process.exit(0) : process.exit(1)); } catch (err) { process.exit(1); }"
+  CMD wget -qO- http://localhost:3000/ || exit 1
 

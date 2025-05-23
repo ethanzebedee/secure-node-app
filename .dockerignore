@@ -1,35 +1,87 @@
-# Dependency directories
+# Node.js dependencies and logs
 node_modules/
 npm-debug.log
 yarn-debug.log
 yarn-error.log
+.npm/
+.yarn/
+*.tgz
+package-lock.json.bak
 
 # Version control
 .git/
 .gitignore
 .gitattributes
+.github/
 
 # Environment variables and secrets
 .env
 .env.*
 *.env
+.npmrc
+.yarnrc
+config.js
+config.json
+**/config/*
+!**/config/default.js
 
-# Development files
-*.log
+# Documentation
 *.md
+docs/
+LICENSE
+CHANGELOG
+AUTHORS
+CONTRIBUTING.md
+
+# Development tools and IDE configs
+.vscode/
+.idea/
 .editorconfig
 .eslintrc
+.eslintrc.json
+.eslintignore
 .prettierrc
-coverage/
+.prettierignore
+.babelrc
+nodemon.json
+tsconfig.json
+webpack.config.js
+.eslintcache
+
+# Test files
 test/
 tests/
 __tests__/
+coverage/
+*.spec.js
+*.test.js
+jest.config.js
+mocha.opts
+
+# Build and output directories
+dist/
+build/
+*.log
+logs/
+tmp/
+temp/
+
+# Security scans and reports
+.snyk
+.scannerwork/
+reports/
+vulnerabilities/
+
+# Cache directories
+.cache/
 
 # OS specific files
 .DS_Store
 Thumbs.db
 
-# Build outputs
-dist/
-build/
+# Docker specific
+.dockerignore
+docker-compose*.yml
+Dockerfile*
+security-checklist.md
 

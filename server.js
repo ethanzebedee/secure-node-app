@@ -90,7 +90,7 @@ app.post("/api/data", [
 
 // Error handling middleware
 // Security: Fixed middleware signature by adding 'next' parameter for proper error handling chain
-app.use((err, req, res, next) => {
+app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
   console.error(err.stack);
   res.status(500).json({
     error: "Something went wrong",

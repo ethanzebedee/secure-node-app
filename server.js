@@ -5,6 +5,7 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const hpp = require("hpp");
 const cors = require("cors");
+const { body, validationResult } = require("express-validator"); // Add express-validator for input validation
 
 // Initialize express app
 const app = express();
@@ -46,10 +47,18 @@ app.use(apiLimiter);
 // Prevent HTTP Parameter Pollution
 app.use(hpp());
 
-// Configure CORS
+// Parse JSON requests with size limits to prevent abuse
+// Security: Limits request body size to prevent DoS attacks via large payloads
+app.use(express.json({ 
+  limit: '100kb',  // Restrict JSON body size to 100kb
+  strict: true     // Only accept arrays and objects
+}));
+
+// Configure CORS with more restrictive defaults
+// Security: Restricts which domains can access the API
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "*", // In production, set to specific domains
+    origin: process.env.CORS_ORIGIN || 'https://example.com', // Default to specific domain instead of wildcard
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -62,8 +71,26 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
+// Example of a POST endpoint with input validation
+// Security: Validates and sanitizes input to prevent injection attacks
+app.post("/api/data", [
+  body('name').isString().trim().escape().isLength({ min: 1, max: 100 }),
+  body('email').isEmail().normalizeEmail(),
+  body('message').optional().isString().trim().escape()
+], (req, res) => {
+  // Check for validation errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  
+  // Process validated input
+  res.status(200).json({ success: true });
+});
+
 // Error handling middleware
-app.use((err, req, res) => {
+// Security: Fixed middleware signature by adding 'next' parameter for proper error handling chain
+app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
   console.error(err.stack);
   res.status(500).json({
     error: "Something went wrong",

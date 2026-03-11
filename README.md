@@ -1,126 +1,128 @@
 # Secure Node App
 
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/ethanzebedee/CI-CD-Pipeline/ci.yml?branch=main)
-![Docker Pulls](https://img.shields.io/badge/docker-ready-blue)
-![Code Style](https://img.shields.io/badge/code%20style-eslint-brightgreen)
-![Testing](https://img.shields.io/badge/tests-jest-red)
+![CI](https://img.shields.io/github/actions/workflow/status/ethanzebedee/secure-node-app/ci.yml?branch=main&label=ci)
+![Node](https://img.shields.io/badge/node-%3E%3D20-0a7b2d)
+![Express](https://img.shields.io/badge/express-5.x-black)
+![Security](https://img.shields.io/badge/security-hardened-blue)
+![Tests](https://img.shields.io/badge/tests-jest%20%2B%20supertest-c62828)
 
-A secure Node.js application demonstrating best practices in authentication, authorization, and CI/CD integration.
+Security-focused Express API designed as a portfolio-ready backend sample.
 
----
+The app demonstrates practical API hardening, defensive middleware, structured error handling, and integration tests that validate real behavior rather than mocked routes.
 
-## 📋 Table of Contents
+## Highlights
 
-- [🛠️ Technologies](#-technologies)
-- [🔐 Security Features](#-security-features)
-- [🔄 CI/CD Integration](#-cicd-integration)
-- [🚀 Setup and Installation](#-setup-and-installation)
-- [🧪 Testing Strategy](#-testing-strategy)
-- [🐳 Docker Containerization](#-docker-containerization)
-- [🔮 Future Improvements](#-future-improvements)
+- Security headers via Helmet (including explicit CSP)
+- Global rate limiting to reduce brute-force and abuse risk
+- CORS restrictions with configurable allowed origin
+- HTTP parameter pollution protection via HPP
+- Strict JSON parsing with payload size limits
+- Input validation and sanitization with express-validator
+- Request correlation with X-Request-Id header
+- Structured JSON errors (validation, 404, 500)
+- Interactive API docs with OpenAPI + Swagger UI
+- JWT auth flow with protected endpoint example
+- Graceful shutdown handling for SIGTERM and SIGINT
+- Multi-stage Docker build with non-root runtime user
 
----
+## API Endpoints
 
-## 🛠️ Technologies
+- `GET /` returns service metadata
+- `GET /healthz` returns health, uptime, and timestamp
+- `GET /docs` opens interactive Swagger docs
+- `GET /docs.json` serves the OpenAPI document
+- `POST /api/auth/token` issues a short-lived demo JWT
+- `POST /api/data` validates and sanitizes `name`, `email`, and optional `message`
+- `GET /api/admin/summary` requires JWT bearer token
 
-- **Node.js** – JavaScript runtime
-- **Express** – Web framework
-- **MongoDB + Mongoose** – NoSQL database and modeling
-- **JWT + bcrypt** – Authentication and password hashing
-- **Helmet** – Secure HTTP headers
-- **dotenv** – Environment configuration
-- **Jest + Supertest** – Testing
-- **ESLint** – Code style enforcement
-- **Docker** – Containerization
+Example success response for `POST /api/data`:
 
----
-
-## 🔐 Security Features
-
-This application includes multiple security enhancements:
-
-- 🔑 **Authentication** – JWT-based user auth
-- 🛡️ **Authorization** – Role-based access control
-- 🧂 **Hashed Passwords** – bcrypt for secure storage
-- 🧢 **HTTP Headers** – Secured with Helmet
-- 🔒 **Env Configs** – Secrets managed via `.env`
-
----
-
-## 🔄 CI/CD Integration
-
-This project integrates directly with the [CI-CD-Pipeline](https://github.com/ethanzebedee/CI-CD-Pipeline), which:
-
-- Automates **linting**, **testing**, and **Docker builds** on every push
-- Utilizes **GitHub Actions** to validate code quality
-- Ensures repeatable, secure deployments with Docker
-
-The GitHub Actions workflow (`ci.yml`) from the CI-CD-Pipeline project has been adapted to validate and build this application.
-
----
-
-## 🚀 Setup and Installation
-
-### Prerequisites
-
-- Node.js (v14+)
-- MongoDB
-- Docker (optional)
-
-### Local Setup
-
-```bash
-git clone https://github.com/ethanzebedee/secure-node-app.git
-cd secure-node-app
-npm install
-cp .env.example .env  # Update your secrets
-npm start
-
+```json
+{
+  "success": true,
+  "requestId": "4e6f8555-8696-4918-9ac2-0b8ae05f8de8",
+  "data": {
+    "name": "Ethan Hammond",
+    "email": "ethan@example.com",
+    "message": "Portfolio check"
+  }
+}
 ```
 
-## 🧪 Testing Strategy
+## Project Structure
+
+```text
+.
+├── src/
+│   └── app.js            # Express app, middleware, and routes
+├── tests/
+│   └── server.test.js    # Integration tests with Supertest
+├── Dockerfile
+├── server.js             # Process bootstrap and graceful shutdown
+└── security-checklist.md
+```
+
+## Run Locally
 
 ```bash
-# Run tests
-npm test
+npm install
+npm start
+```
 
-# Lint the code
+Default port is `3000`.
+
+Optional environment variables:
+
+- `PORT` (default: `3000`)
+- `NODE_ENV` (example: `production`)
+- `CORS_ORIGIN` (default: `https://example.com`)
+- `JWT_SECRET` (default: `dev-only-secret-change-me`)
+
+## API Docs
+
+After starting the app, open:
+
+- `http://localhost:3000/docs` for Swagger UI
+- `http://localhost:3000/docs.json` for raw OpenAPI JSON
+
+You can use the Swagger UI to run requests directly and test the auth flow.
+
+## JWT Auth Demo
+
+```bash
+# 1) Get a token
+TOKEN=$(curl -s -X POST http://localhost:3000/api/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Ethan","role":"admin"}' | jq -r .token)
+
+# 2) Call protected endpoint
+curl -s http://localhost:3000/api/admin/summary \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+## Test and Lint
+
+```bash
+npm test
+npm run test:coverage
 npm run lint
 ```
 
-**Test coverage includes:**
-
-- ✅ Unit tests (functions, auth)
-- ✅ Integration tests (API endpoints)
-- ✅ CI validation with Jest and ESLint
-
----
-
-## 🐳 Docker Containerization
+## Docker
 
 ```bash
-# Build the image
-docker build -t secure-node-app .
-
-# Run the container
-docker run -p 3000:3000 secure-node-app
+npm run docker:build
+docker run --rm -p 3000:3000 secure-node-app:latest
 ```
 
-**Docker best practices are followed:**
+Health check endpoint used by container:
 
-- 🧱 Multi-stage build
-- 🐋 Minimal base image (Alpine)
-- 📄 `.dockerignore` for lean builds
+- `GET /healthz`
 
----
+## Why This Is Portfolio-Worthy
 
-## 🔮 Future Improvements
+- This is the kind of backend I would actually show in an interview: secure defaults, clear structure, and docs people can run immediately.
+- The tests hit real app behavior, so it proves the middleware and endpoints actually work instead of just looking good on paper.
+- Splitting app setup from process startup keeps the code easier to maintain and closer to how production services are usually organized.
 
-- 🔁 Add staging/production deployment pipelines
-- 📈 Integrate code coverage and reporting
-- 🔍 Add security auditing tools
-- ☁️ Connect to cloud platforms for deployment
-
----
-
-Built with 💻 by [Ethan Zebedee](https://github.com/ethanzebedee)
+Built by [Ethan Zebedee](https://github.com/ethanzebedee)

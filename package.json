@@ -5,8 +5,11 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "dev": "NODE_ENV=development node server.js",
     "lint": "eslint .",
     "test": "jest",
+    "test:coverage": "jest --coverage",
+    "docs:validate": "node -e \"const fs=require('fs'); JSON.parse(fs.readFileSync('src/openapi.json','utf8')); console.log('OpenAPI spec is valid JSON');\"",
     "security:audit": "npm audit --audit-level=high",
     "security:snyk": "snyk test",
     "security:snyk:docker": "snyk container test secure-node-app:latest",
@@ -32,7 +35,9 @@
     "express-rate-limit": "^7.2.0",
     "express-validator": "^7.3.1",
     "helmet": "^7.1.0",
-    "hpp": "^0.2.3"
+    "hpp": "^0.2.3",
+    "jsonwebtoken": "^9.0.2",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "audit-ci": "^6.6.1",

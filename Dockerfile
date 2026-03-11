@@ -33,6 +33,7 @@ COPY --from=builder --chown=nodeapp:nodeapp /app/node_modules ./node_modules
 
 # Copy application files
 COPY --chown=nodeapp:nodeapp server.js package.json ./
+COPY --chown=nodeapp:nodeapp src ./src
 
 # Switch to non-root user
 USER nodeapp
@@ -45,5 +46,5 @@ CMD ["node", "server.js"]
 
 # Add healthcheck
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget -qO- http://localhost:3000/ || exit 1
+    CMD wget -qO- http://localhost:3000/healthz || exit 1
 

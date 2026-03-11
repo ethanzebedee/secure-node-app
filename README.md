@@ -119,10 +119,4 @@ Health check endpoint used by container:
 
 - `GET /healthz`
 
-## Why This Is Portfolio-Worthy
-
-- This is the kind of backend I would actually show in an interview: secure defaults, clear structure, and docs people can run immediately.
-- The tests hit real app behavior, so it proves the middleware and endpoints actually work instead of just looking good on paper.
-- Splitting app setup from process startup keeps the code easier to maintain and closer to how production services are usually organized.
-
 Built by [Ethan Zebedee](https://github.com/ethanzebedee)
